@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=1920, initial-scale=1">
+<title>VIDAA Frame</title>
+<link rel="stylesheet" href="style.css?v=5">
+</head>
+<body>
+<div id="stage">
+  <div id="wall">
+    <div class="layer" id="wallA"></div>
+    <div class="layer" id="wallB"></div>
+    <video id="wallVideo" muted loop playsinline></video>
+    <div id="scrim"></div>
+  </div>
+
+  <div id="status">
+    <div class="chip" id="netChip"><span class="dot" id="netDot"></span><span id="netIcon"></span><span id="netText">Wi‑Fi</span></div>
+  </div>
+
+  <div id="clock">
+    <div id="wline"></div>
+    <div class="glassclk"><div id="time"><span id="hm">--:--</span><span id="ampm"></span></div></div>
+    <div id="date"></div>
+  </div>
+
+  <div id="music"><div class="mcard sheen">
+    <div class="mart" id="mart"><div class="martph">♪</div></div>
+    <div class="minfo">
+      <div class="mtitle" id="mtitle">Spotify</div>
+      <div class="martist" id="martist">Press OK to connect</div>
+      <div class="mprog"><span class="mt" id="mcur">0:00</span><div class="mbar"><div class="mfill" id="mfill"></div></div><span class="mt" id="mdur">0:00</span></div>
+    </div>
+    <div class="mctl">
+      <div class="mbtn" id="mprev"><svg viewBox="0 0 48 48" fill="#fff"><polygon points="16,10 16,38 14,38 14,10"/><polygon points="36,10 18,24 36,38"/></svg></div>
+      <div class="mbtn mbig" id="mplay"><svg id="mplayIcon" viewBox="0 0 48 48" fill="#fff"><polygon points="16,10 38,24 16,38"/></svg></div>
+      <div class="mbtn" id="mnext"><svg viewBox="0 0 48 48" fill="#fff"><polygon points="32,10 32,38 34,38 34,10"/><polygon points="12,10 30,24 12,38"/></svg></div>
+    </div>
+  </div></div>
+
+  <div id="rows">
+    <div class="row" id="rowDock"><div class="track" id="trackDock"></div></div>
+  </div>
+
+  <div id="sheet" class="hidden">
+    <div id="sheetHead"><span id="sheetTitle"></span></div>
+    <div id="sheetBody"></div>
+    <div id="sheetHint"></div>
+  </div>
+</div>
+<script src="config.js?v=5"></script>
+<script src="apps.js?v=5"></script>
+<script src="vidaa.js?v=5"></script>
+<script src="spotify.js?v=6"></script>
+<script src="main.js?v=6"></script>
+<script src="https://sdk.scdn.co/spotify-player.js"></script>
+</body>
+</html>

@@ -1,0 +1,125 @@
+/* VIDAA Frame 4.0 — Liquid-glass look tuned for TV GPUs.
+   NO backdrop-filter and NO perpetual animations (they froze the TV). Glass is faked with
+   translucent fills + a top sheen, which is cheap to paint. 1920x1080 stage. */
+@font-face { font-family: Manrope; src: url(manrope.woff2) format("woff2"); font-weight: 300 800; }
+:root {
+  --tile: rgba(255,255,255,0.14);
+  --tileEdge: rgba(255,255,255,0.26);
+  --panel: rgba(16,18,24,0.80);
+  --focus: rgba(255,255,255,0.90);
+  --spring: cubic-bezier(0.22, 1, 0.36, 1);
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: #05060a; }
+body { font-family: Manrope, -apple-system, "SF Pro Display", "Segoe UI", Arial, sans-serif; color: #fff; -webkit-font-smoothing: antialiased; letter-spacing: -0.01em; }
+#stage { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; transform-origin: 0 0; overflow: hidden; }
+
+/* wallpaper — static image, crossfade only on change (no zoom animation) */
+#wall, #wall .layer, #wallVideo, #scrim { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; }
+#wall .layer { background-size: cover; background-position: 50% 50%; opacity: 0; transition: opacity 1.6s ease; }
+#wall .layer.on { opacity: 1; }
+#wallVideo { object-fit: cover; display: none; } #wallVideo.on { display: block; }
+#scrim { background: linear-gradient(180deg, rgba(4,6,12,.44) 0%, rgba(4,6,12,.05) 28%, rgba(4,6,12,.12) 55%, rgba(4,6,12,.72) 100%); }
+
+/* a cheap "glass" surface: translucent fill + sheen (no blur) */
+.sheen::after { content: ""; position: absolute; left: 0; top: 0; right: 0; height: 46%; border-radius: inherit;
+  background: linear-gradient(180deg, rgba(255,255,255,.22), rgba(255,255,255,0)); pointer-events: none; }
+
+/* status chip */
+#status { position: absolute; right: 64px; top: 60px; }
+.chip { display: inline-block; padding: 15px 26px; border-radius: 999px; font-size: 25px; font-weight: 600;
+  background: var(--tile); border: 1px solid var(--tileEdge); box-shadow: inset 0 1px 0 rgba(255,255,255,.35); }
+.chip .dot { display: inline-block; width: 13px; height: 13px; border-radius: 50%; background: #34c759; margin-right: 11px; vertical-align: middle; box-shadow: 0 0 9px rgba(52,199,89,.8); }
+.chip.off .dot { background: #ff453a; box-shadow: 0 0 9px rgba(255,69,58,.8); }
+.chip svg { width: 26px; height: 26px; vertical-align: middle; margin-right: 9px; stroke: #fff; } .chip svg .f { fill: #fff; }
+#netText { vertical-align: middle; }
+
+/* clock — transparent liquid-glass numerals, no box (iPhone lock screen) */
+#clock { position: absolute; left: 96px; top: 54px; }
+#wline { font-size: 33px; font-weight: 600; opacity: .95; margin: 0 0 6px 6px; text-shadow: 0 2px 14px rgba(0,0,0,.5); min-height: 40px; }
+.glassclk { display: inline-block; padding: 0; margin-left: 4px; }
+#time { line-height: 1; }
+#hm { font-size: 252px; font-weight: 800; letter-spacing: -8px;
+  color: rgba(255,255,255,0.13);
+  -webkit-text-stroke: 2.5px rgba(255,255,255,0.62);
+  text-shadow: 0 3px 2px rgba(255,255,255,0.33), 0 -2px 2px rgba(0,0,0,0.28), 0 22px 42px rgba(0,0,0,0.42); }
+#ampm { font-size: 58px; font-weight: 700; margin-left: 16px; opacity: .92; -webkit-text-stroke: 0; color: #fff; }
+#date { margin: 12px 0 0 10px; font-size: 38px; font-weight: 600; opacity: .95; text-shadow: 0 2px 14px rgba(0,0,0,.5); }
+
+/* dock — iOS glass icons */
+#rows { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; }
+.row { position: absolute; left: 0; width: 1920px; }
+#rowDock { top: 560px; }
+.track { position: absolute; left: 96px; top: 0; white-space: nowrap; transition: transform .34s var(--spring); }
+.icon { position: relative; display: inline-block; vertical-align: top; width: 176px; margin-right: 40px; text-align: center; }
+.icon .sq { position: relative; width: 176px; height: 176px; border-radius: 42px; margin: 0 auto; overflow: hidden;
+  background: var(--tile); border: 1px solid var(--tileEdge); box-shadow: inset 0 2px 0 rgba(255,255,255,.4), 0 12px 26px rgba(0,0,0,.30);
+  transition: transform .26s var(--spring), box-shadow .22s, background-color .22s; }
+.icon .sq img { position: absolute; left: 50%; top: 50%; width: 112px; height: 112px; margin: -56px 0 0 -56px; border-radius: 26px; object-fit: cover; }
+.icon .sq .glyph { position: absolute; left: 50%; top: 50%; width: 92px; height: 92px; margin: -46px 0 0 -46px; stroke: #fff; } .icon .sq .glyph .f { fill: #fff; }
+.icon .lbl { margin-top: 20px; font-size: 27px; font-weight: 600; opacity: .9; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; transition: opacity .2s; }
+.icon.focus .sq { transform: scale(1.14) translateY(-10px); background: var(--focus); box-shadow: 0 24px 50px rgba(0,0,0,.44), 0 0 0 5px rgba(255,255,255,.5); }
+.icon.focus .lbl { opacity: 1; }
+
+/* ---- Music widget: compact now-playing beside the clock, hidden until Play/Pause ---- */
+#music { position: absolute; left: 812px; top: 150px; width: 900px; opacity: 0; transform: translateY(-16px); pointer-events: none; transition: opacity .3s ease, transform .3s var(--spring); }
+#music.show { opacity: 1; transform: translateY(0); pointer-events: auto; }
+.mcard { position: relative; border-radius: 34px; padding: 22px 26px; overflow: hidden; height: 196px;
+  background: var(--panel); border: 1px solid var(--tileEdge); box-shadow: inset 0 1px 0 rgba(255,255,255,.3), 0 20px 46px rgba(0,0,0,.5); transition: box-shadow .2s; }
+#music.focus .mcard { box-shadow: inset 0 1px 0 rgba(255,255,255,.5), 0 24px 54px rgba(0,0,0,.6), 0 0 0 4px rgba(255,255,255,.5); }
+.mart { position: absolute; left: 26px; top: 22px; width: 152px; height: 152px; border-radius: 20px; overflow: hidden; background: #26262e; box-shadow: 0 8px 20px rgba(0,0,0,.4); }
+.mart img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.martph { width: 100%; height: 100%; text-align: center; line-height: 152px; font-size: 64px; opacity: .5; }
+.minfo { position: absolute; left: 200px; right: 26px; top: 24px; }
+.mtitle { font-size: 36px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.martist { margin-top: 4px; font-size: 26px; opacity: .72; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mprog { margin-top: 18px; display: block; }
+.mprog .mt { font-size: 21px; opacity: .7; vertical-align: middle; }
+.mbar { display: inline-block; vertical-align: middle; width: 440px; height: 7px; margin: 0 14px; border-radius: 4px; background: rgba(255,255,255,.22); overflow: hidden; }
+.mfill { height: 100%; width: 0; background: #fff; border-radius: 4px; }
+.mctl { position: absolute; left: 200px; bottom: 18px; }
+.mbtn { display: inline-block; width: 52px; height: 52px; margin-right: 22px; border-radius: 50%; background: rgba(255,255,255,.12); vertical-align: middle; cursor: pointer; transition: background-color .2s, transform .15s; }
+.mbtn svg { width: 30px; height: 30px; margin: 11px; }
+.mbtn.mbig { width: 68px; height: 68px; } .mbtn.mbig svg { width: 40px; height: 40px; margin: 14px; }
+.mbtn:hover { background: rgba(255,255,255,.26); transform: scale(1.06); }
+
+/* ---- Sheets ---- */
+#sheet { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; background: rgba(6,8,13,.92); opacity: 1; transition: opacity .25s ease; }
+#sheet.hidden { display: none; } #sheet.closing { opacity: 0; }
+body.sheet-open #clock, body.sheet-open #rows, body.sheet-open #status, body.sheet-open #music { visibility: hidden; }
+#sheetHead { position: absolute; left: 96px; top: 70px; font-size: 58px; font-weight: 700; }
+#sheetHint { position: absolute; left: 96px; bottom: 50px; font-size: 24px; opacity: .6; }
+#sheetBody { position: absolute; left: 96px; top: 184px; width: 1728px; height: 804px; overflow: hidden; }
+
+.grid { position: absolute; left: 0; top: 0; transition: transform .3s var(--spring); }
+.grid .gtile { position: relative; display: inline-block; vertical-align: top; width: 300px; height: 212px; margin: 0 30px 30px 0; border-radius: 34px; overflow: hidden;
+  background: var(--tile); border: 1px solid var(--tileEdge); box-shadow: inset 0 1px 0 rgba(255,255,255,.28), 0 10px 24px rgba(0,0,0,.26); transition: transform .24s var(--spring), background-color .2s; }
+.grid .gtile .ic { position: absolute; top: 30px; left: 0; width: 100%; text-align: center; }
+.grid .gtile .ic img { width: 100px; height: 100px; border-radius: 24px; object-fit: cover; }
+.grid .gtile .ic .badge { display: inline-block; width: 100px; height: 100px; line-height: 100px; border-radius: 24px; font-size: 52px; font-weight: 800; background: rgba(255,255,255,.14); }
+.grid .gtile .nm { position: absolute; bottom: 20px; left: 12px; right: 12px; text-align: center; font-size: 25px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.grid .gtile .web0 { position: absolute; top: 14px; right: 16px; font-size: 18px; opacity: .5; }
+.grid .gtile.focus { transform: scale(1.07) translateY(-4px); background: var(--focus); color: #0a0a0a; }
+
+.cc { position: absolute; left: 50%; top: 230px; width: 760px; margin-left: -380px; padding: 46px 56px 38px; border-radius: 40px;
+  background: var(--panel); border: 1px solid var(--tileEdge); box-shadow: 0 30px 70px rgba(0,0,0,.55), inset 0 1px 0 rgba(255,255,255,.35); text-align: center; }
+.cc .ring { width: 142px; height: 142px; margin: 0 auto 22px; border-radius: 50%; background: radial-gradient(circle at 50% 36%, #4a4a52, #2a2a30); box-shadow: 0 14px 34px rgba(0,0,0,.45), inset 0 2px 0 rgba(255,255,255,.4); position: relative; }
+.cc .ring svg { width: 70px; height: 70px; position: absolute; left: 36px; top: 36px; stroke: #fff; } .cc .ring svg .f { fill: #fff; }
+.cc h2 { margin: 0 0 6px; font-size: 42px; font-weight: 700; } .cc .sub { font-size: 24px; opacity: .72; margin-bottom: 20px; }
+.cc ol { text-align: left; margin: 0 auto; padding: 0; max-width: 560px; counter-reset: s; list-style: none; }
+.cc ol li { position: relative; font-size: 26px; line-height: 1.5; padding: 9px 0 9px 58px; }
+.cc ol li::before { counter-increment: s; content: counter(s); position: absolute; left: 0; top: 9px; width: 38px; height: 38px; line-height: 38px; text-align: center; border-radius: 50%; background: rgba(255,255,255,.18); font-size: 21px; font-weight: 700; }
+
+.info { position: absolute; left: 0; top: 0; width: 1728px; }
+.info .card { background: var(--tile); border: 1px solid var(--tileEdge); border-radius: 28px; padding: 26px 34px; margin-bottom: 22px; box-shadow: inset 0 1px 0 rgba(255,255,255,.22); }
+.info .card h3 { margin: 0 0 12px; font-size: 24px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; opacity: .7; }
+.info .kv { font-size: 27px; line-height: 1.65; } .info .kv b { display: inline-block; width: 300px; opacity: .6; font-weight: 600; }
+.info .credit { font-size: 29px; line-height: 1.55; } .info .credit .big { font-size: 40px; font-weight: 700; }
+.info .btn { display: inline-block; margin-top: 2px; padding: 16px 32px; border-radius: 999px; font-size: 26px; font-weight: 700; background: var(--tile); border: 1px solid var(--tileEdge); transition: transform .2s var(--spring), background-color .2s; }
+.info .btn.focus { transform: scale(1.05); background: var(--focus); color: #0a0a0a; }
+.info { transition: transform .2s; }
+.fnlist { font-family: "SF Mono", Consolas, "DejaVu Sans Mono", monospace; font-size: 21px; line-height: 32px; }
+.fnlist div { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.fnlist .warn { color: #ff8f8f; } .fnlist .get { color: #8fe3a4; }
+/* mouse: show pointer on interactive elements */
+.icon, .gtile, .info .btn, #sheet { cursor: pointer; }
